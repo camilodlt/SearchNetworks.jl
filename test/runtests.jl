@@ -1,6 +1,10 @@
-using SearchNetworks
 using Test
+using DuckDB
+using DBInterface
+using SearchNetworks
+using DataFrames
 
-@testset "SearchNetworks.jl" begin
-    # Write your tests here.
+@testset "DB CREATION, Writing" begin
+    include("tables_test.jl")
+    include("processing_db_test.jl")
 end
