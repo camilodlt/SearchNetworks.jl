@@ -32,6 +32,7 @@ Like string => VARCHAR
 struct SN_col_type <: ColumnType
     string::Bool
     float::Bool
+    vec_of_vec_float::Bool
 end
 
 """
@@ -39,14 +40,13 @@ end
 
 The col can be of one (and only one) type (otherwise an AssertionError is raised.)
 """
-function SN_col_type(; string::Bool = false, float::Bool = false)
-    if !string && !float
-        throw(AssertionError("All types are false. One has to be true"))
-    end
-    if string && float
-        throw(AssertionError("All types are true, only one can be true"))
-    end
-    return SN_col_type(string, float)
+function SN_col_type(;
+    string::Bool = false,
+    float::Bool = false,
+    vec_of_vec_float::Bool = false,
+)
+    @assert sum([string, float, vec_of_vec_float]) == 1 "Only one type can be true"
+    return SN_col_type(string, float, vec_of_vec_float)
 end
 
 """
@@ -60,6 +60,9 @@ function getDBtype(sn_col::SN_col_type)
     end
     if sn_col.float
         return "DOUBLE"
+    end
+    if sn_col.vec_of_vec_float
+        return "DOUBLE[][]"
     end
 end
 
@@ -479,3 +482,7 @@ Calls `write_to_edges!` with a vector of length 1 composed only of the dict `con
 function write_to_edges!(con::DuckDB.DB, content::OrderedDict{String,V}) where {V}
     write_to_edges!(con, [content])
 end
+
+DuckDB.append(appender::DuckDB.Appender, val::Vector{Vector{Float64}}) =
+    DuckDB.duckdb_append_null(appender.handle);
+
